@@ -13,7 +13,7 @@ public class RpHND_GRB_Main {
 	private static double[][] distances = Distance.get(coordinates);
 	private static int nVar = tmpFlows.length;
 	private static double[][] flows = new double[nVar][nVar];
-	private static int D = 1; // Maximum number of simultaneous disruptions
+	private static int D = 2; // Maximum number of simultaneous disruptions
 	private static int R = (int) Math.pow(2, D + 1) - 2; // Largest index in the
 															// full binary tree
 	private static double q = 0.05;
@@ -93,8 +93,8 @@ public class RpHND_GRB_Main {
 							//double CoEf = flows[i][j] * Cikmj(i, k, m, j) * (1 - Q(i,k,m,j));							
 							String varName = "x" + i + "_" + k + "_" + m + "_"
 									+ j + "_0";
-							x[i][k][m][j][0] = model.addVar(0.0, 1.0, 0.0,
-									GRB.BINARY, varName);
+							x[i][k][m][j][0] = model.addVar(0.0, GRB.INFINITY, 0.0,
+									GRB.CONTINUOUS, varName);
 						}
 					}
 				}
@@ -108,8 +108,8 @@ public class RpHND_GRB_Main {
 								//double CoEf = flows[i][j] * Cikmj(i, k, m, j) * Math.pow(q, Math.floor(Math.log(r+1)/Math.log(2)));
 								String varName = "x" + i + "_" + k + "_" + m
 										+ "_" + j + "_" + r;
-								x[i][k][m][j][r] = model.addVar(0.0, 1.0, 0.0,
-										GRB.BINARY, varName);
+								x[i][k][m][j][r] = model.addVar(0.0, GRB.INFINITY, 0.0,
+										GRB.CONTINUOUS, varName);
 							}
 						}
 					}
@@ -117,7 +117,7 @@ public class RpHND_GRB_Main {
 			}
 
 			for (int i = 0; i < nVar; i++) {
-				y[i] = model.addVar(0, 1, 0, GRB.BINARY, "y" + i);
+				y[i] = model.addVar(0, GRB.INFINITY, 0, GRB.CONTINUOUS, "y" + i);
 			}
 
 			// Integrate new variables
@@ -317,7 +317,7 @@ public class RpHND_GRB_Main {
 					for (int k=0;k<nVar;k++){
 						for (int r=0;r<=Math.pow(2, D) - 2;r++){
 							GRBLinExpr con10 = new GRBLinExpr();
-							for (int s:BinaryTree.leftChildren(r, D)){
+							for (int s:BinaryTree.getLeftChildren(r, D)){
 								for (int m=0; m<nVar; m++){
 									con10.addTerm(1, x[i][k][m][j][s]);
 									con10.addTerm(1, x[i][m][k][j][s]);
@@ -339,7 +339,7 @@ public class RpHND_GRB_Main {
 						for (int r=0;r<=Math.pow(2, D) - 2;r++){
 
 							GRBLinExpr con11 = new GRBLinExpr();
-							for (int s : BinaryTree.rightChildren(r, D)) {
+							for (int s : BinaryTree.getRightChildren(r, D)) {
 								for (int k = 0; k < nVar; k++) {
 									con11.addTerm(1, x[i][k][m][j][s]);
 									con11.addTerm(1, x[i][m][k][j][s]);
@@ -384,7 +384,8 @@ public class RpHND_GRB_Main {
 			}
 			
 			out.close();
-
+			System.out.println("Number of variables: " + model.get(GRB.IntAttr.NumVars));
+			System.out.println("Number of constraints: " + model.get(GRB.IntAttr.NumConstrs));
 			//Results 
 			System.out.println("Obj: " + model.get(GRB.DoubleAttr.ObjVal));
 			 // Dispose of model and environment
