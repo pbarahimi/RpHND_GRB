@@ -386,11 +386,13 @@ public class RpHND_GRB_Main {
 			out.close();
 			System.out.println("Number of variables: " + model.get(GRB.IntAttr.NumVars));
 			System.out.println("Number of constraints: " + model.get(GRB.IntAttr.NumConstrs));
+			
 			//Results 
 			System.out.println("Obj: " + model.get(GRB.DoubleAttr.ObjVal));
-			 // Dispose of model and environment
-		      model.dispose();
-		      env.dispose();
+			
+			// Dispose of model and environment
+		    model.dispose();
+		    env.dispose();
 
 
 		} catch (GRBException e) {
