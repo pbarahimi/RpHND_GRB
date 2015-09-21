@@ -13,11 +13,11 @@ public class RpHND_GRB_Main {
 	private static double[][] distances = Distance.get(coordinates);
 	private static int nVar = tmpFlows.length;
 	private static double[][] flows = new double[nVar][nVar];
-	private static int D = 2; // Maximum number of simultaneous disruptions
+	private static int D = 1; // Maximum number of simultaneous disruptions
 	private static int R = (int) Math.pow(2, D + 1) - 2; // Largest index in the
 															// full binary tree
 	private static double q = 0.05;
-	private static int P = 4; // number of hubs to be located
+	private static int P = 2; // number of hubs to be located
 	private static int M = nVar * R; // the big M
 
 
@@ -67,7 +67,7 @@ public class RpHND_GRB_Main {
 		else
 			return q;
 	}
-	
+
 	public static void main(String[] args) throws FileNotFoundException {
 		
 		//Filling in the flows matrix assymetrically 
@@ -77,7 +77,6 @@ public class RpHND_GRB_Main {
 			}
 		}
 		
-		MyArray.print(flows);
 		try {
 			GRBEnv env = new GRBEnv("RpHND.log");
 			GRBModel model = new GRBModel(env);
@@ -152,13 +151,13 @@ public class RpHND_GRB_Main {
 			model.setObjective(expr, GRB.MINIMIZE);
 
 			// Adding constraints
-
+double tot = 0;
 			// Constraint 2
 			GRBLinExpr con2 = new GRBLinExpr();
 			for (int i = 0; i < nVar; i++) {
-				con2.addTerm(1, y[i]);
+				tot+=1;con2.addTerm(1, y[i]);
 			}
-			model.addConstr(con2, GRB.EQUAL, P, null);
+			model.addConstr(con2, GRB.EQUAL, P, "u2");
 
 			// Constraint 3
 			for (int i = 0; i < nVar; i++) {
@@ -167,10 +166,10 @@ public class RpHND_GRB_Main {
 					GRBLinExpr con3 = new GRBLinExpr();
 					for (int k = 0; k < nVar; k++) {
 						for (int m = 0; m < nVar; m++) {
-							con3.addTerm(1, x[i][k][m][j][0]);
+							tot+=1;con3.addTerm(1, x[i][k][m][j][0]);
 						}
 					}
-					model.addConstr(con3, GRB.EQUAL, 1, null);
+					model.addConstr(con3, GRB.EQUAL, 1, "u3_" + i + "_" + j);
 				}
 			}
 
@@ -182,10 +181,10 @@ public class RpHND_GRB_Main {
 
 							GRBLinExpr con4 = new GRBLinExpr();
 							for (int m = 0; m < nVar; m++) {
-								con4.addTerm(1, x[i][k][m][j][r]);
+								tot+=1;con4.addTerm(1, x[i][k][m][j][r]);
 							}
-							con4.addTerm(-1, y[k]);
-							model.addConstr(con4, GRB.LESS_EQUAL, 0, null);
+							tot+=-1;con4.addTerm(-1, y[k]);
+							model.addConstr(con4, GRB.LESS_EQUAL, 0, "u4_" + i + "_" + j + "_" + k + "_" + r);
 						}
 					}
 				}
@@ -199,10 +198,10 @@ public class RpHND_GRB_Main {
 
 							GRBLinExpr con5 = new GRBLinExpr();
 							for (int k = 0; k < nVar; k++) {
-								con5.addTerm(1, x[i][k][m][j][r]);
+								tot+=1;con5.addTerm(1, x[i][k][m][j][r]);
 							}
-							con5.addTerm(-1, y[m]);
-							model.addConstr(con5, GRB.LESS_EQUAL, 0, null);
+							tot+=-1;con5.addTerm(-1, y[m]);
+							model.addConstr(con5, GRB.LESS_EQUAL, 0, "u5_" + i + "_" + j + "_" + m + "_" + r);
 						}
 					}
 				}
@@ -217,12 +216,12 @@ public class RpHND_GRB_Main {
 						for (int k = 0; k < nVar; k++) {
 							for (int m = 0; m < nVar; m++) {
 								if (k != i && m != i) {
-									con6.addTerm(1, x[i][k][m][j][r]);
+									tot+=1;con6.addTerm(1, x[i][k][m][j][r]);
 								}
 							}
 						}
-						con6.addTerm(M, y[i]);
-						model.addConstr(con6, GRB.LESS_EQUAL, M, null);
+						tot+=M;con6.addTerm(M, y[i]);
+						model.addConstr(con6, GRB.LESS_EQUAL, M, "u6_" + i + "_" + j + "_" + r);
 					}
 				}
 			}
@@ -236,12 +235,12 @@ public class RpHND_GRB_Main {
 						for (int k = 0; k < nVar; k++) {
 							for (int m = 0; m < nVar; m++) {
 								if (k != j && m != j) {
-									con7.addTerm(1, x[i][k][m][j][r]);
+									tot+=1;con7.addTerm(1, x[i][k][m][j][r]);
 								}
 							}
 						}
-						con7.addTerm(M, y[j]);
-						model.addConstr(con7, GRB.LESS_EQUAL, M, null);
+						tot+=M;con7.addTerm(M, y[j]);
+						model.addConstr(con7, GRB.LESS_EQUAL, M, "u7_" + i + "_" + j + "_" + r);
 					}
 				}
 			}
@@ -261,20 +260,20 @@ public class RpHND_GRB_Main {
 						for (int k = 0; k < nVar; k++) {
 							for (int m = 0; m < nVar; m++) {
 								if (k != i && k != j) {
-									con8.addTerm(1, x[i][k][m][j][r]);
+									tot+=1;con8.addTerm(1, x[i][k][m][j][r]);
 								}
 							}
 						}
 
 						for (int k = 0; k < nVar; k++) {
 							for (int m = 0; m < nVar; m++) {
-								con8.addTerm(-1, x[i][k][m][j][2 * r + 1]); // left
+								tot+=-1;con8.addTerm(-1, x[i][k][m][j][2 * r + 1]); // left
 																			// child
 																			// node
 
 							}
 						}
-						model.addConstr(con8, GRB.LESS_EQUAL, 0, null);
+						model.addConstr(con8, GRB.LESS_EQUAL, 0, "u8_" + i + "_" + j + "_" + r);
 					}
 				}
 			}
@@ -294,19 +293,19 @@ public class RpHND_GRB_Main {
 						for (int k = 0; k < nVar; k++) {
 							for (int m = 0; m < nVar; m++) {
 								if (m!=i && m!=j){
-									con9.addTerm(1, x[i][k][m][j][r]);
+									tot+=1;con9.addTerm(1, x[i][k][m][j][r]);
 								}
 							}
 						}
 						
 						for (int k = 0; k < nVar; k++) {
 							for (int m = 0; m < nVar; m++) {
-								con9.addTerm(-1, x[i][k][m][j][2 * r + 2]); // right
+								tot+=-1;con9.addTerm(-1, x[i][k][m][j][2 * r + 2]); // right
 																			// child
 																			// node
 							}
 						}
-						model.addConstr(con9, GRB.LESS_EQUAL, 0, null);
+						model.addConstr(con9, GRB.LESS_EQUAL, 0, "u9_" + i + "_" + j + "_" + r);
 					}
 				}
 			}
@@ -317,16 +316,17 @@ public class RpHND_GRB_Main {
 					for (int k=0;k<nVar;k++){
 						for (int r=0;r<=Math.pow(2, D) - 2;r++){
 							GRBLinExpr con10 = new GRBLinExpr();
+							System.out.println("r: " + r + ", D: " + D);
 							for (int s:BinaryTree.getLeftChildren(r, D)){
 								for (int m=0; m<nVar; m++){
-									con10.addTerm(1, x[i][k][m][j][s]);
-									con10.addTerm(1, x[i][m][k][j][s]);
+									tot+=1;con10.addTerm(1, x[i][k][m][j][s]);
+									tot+=1;con10.addTerm(1, x[i][m][k][j][s]);
 								}
 							}
 							for (int m=0; m<nVar; m++){
-								con10.addTerm(M , x[i][k][m][j][r]);
+								tot+=M;con10.addTerm(M , x[i][k][m][j][r]);
 							}
-							model.addConstr(con10, GRB.LESS_EQUAL, M, null);
+							model.addConstr(con10, GRB.LESS_EQUAL, M, "u10_" + i + "_" + j + "_" + k + "_" + r);
 						}
 					}
 				}
@@ -341,14 +341,14 @@ public class RpHND_GRB_Main {
 							GRBLinExpr con11 = new GRBLinExpr();
 							for (int s : BinaryTree.getRightChildren(r, D)) {
 								for (int k = 0; k < nVar; k++) {
-									con11.addTerm(1, x[i][k][m][j][s]);
-									con11.addTerm(1, x[i][m][k][j][s]);
+									tot+=1;con11.addTerm(1, x[i][k][m][j][s]);
+									tot+=1;con11.addTerm(1, x[i][m][k][j][s]);
 								}
 							}
 							for (int k = 0; k < nVar; k++) {
-								con11.addTerm(M, x[i][k][m][j][r]);
+								tot+=M;con11.addTerm(M, x[i][k][m][j][r]);
 							}
-							model.addConstr(con11, GRB.LESS_EQUAL, M, null);
+							model.addConstr(con11, GRB.LESS_EQUAL, M, "u11_" + i + "_" + j + "_" + m + "_" + r);
 						}
 					}
 				}
@@ -358,32 +358,20 @@ public class RpHND_GRB_Main {
 			model.optimize();
 			
 			//Printing solution to a file
-			File file = new File("D:/results.txt");
+			File file = new File("D:/priamlResults.txt");
 			PrintWriter out = new PrintWriter(file);
 			
-			for (int i = 0; i < nVar; i++) {
-				for (int j = i + 1; j < nVar; j++) {
-					for (int k = 0; k < nVar; k++) {
-						for (int m = 0; m < nVar; m++) {
-							for (int r = 0; r <= R; r++) {
-								if (x[i][k][m][j][r].get(GRB.DoubleAttr.X)>0)
-								out.println(x[i][k][m][j][r].get(GRB.StringAttr.VarName)
-				                         + " " + x[i][k][m][j][r].get(GRB.DoubleAttr.X)
-				                         + " " + x[i][k][m][j][r].get(GRB.DoubleAttr.Obj));
-								//System.out.println(x[i][k][m][j][r].get(GRB.StringAttr.VarName)
-				                        // + " " +x[i][k][m][j][r].get(GRB.DoubleAttr.Obj));
-							}
-						}
-					}
-				}
-			}
-			
-			for (int i=0; i<nVar; i++){
-				out.println(y[i].get(GRB.StringAttr.VarName) + " " +
-						y[i].get(GRB.DoubleAttr.X));
-			}
-			
+		/*	GRBConstr[] constrs = model.getConstrs();
+			for (GRBConstr constr: constrs){
+				out.println(constr.get(GRB.StringAttr.ConstrName) + " " + constr.get(GRB.DoubleAttr.Pi));
+			}		
+			*/
+			GRBVar[] vars = model.getVars();
+			for (GRBVar var: vars){
+				out.println(var.get(GRB.StringAttr.VarName) + " " + var.get(GRB.DoubleAttr.X));
+			}	
 			out.close();
+			
 			System.out.println("Number of variables: " + model.get(GRB.IntAttr.NumVars));
 			System.out.println("Number of constraints: " + model.get(GRB.IntAttr.NumConstrs));
 			
@@ -393,8 +381,7 @@ public class RpHND_GRB_Main {
 			// Dispose of model and environment
 		    model.dispose();
 		    env.dispose();
-
-
+		    System.out.println(tot);
 		} catch (GRBException e) {
 			System.out.println("Error code: " + e.getErrorCode() + ". "
 					+ e.getMessage());
