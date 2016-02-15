@@ -318,7 +318,7 @@ public class RpHND_GRB_Main {
 			}
 
 			// Constraint 10
-			/*for (int i=0;i<nVar;i++){
+		/*	for (int i=0;i<nVar;i++){
 				for (int j=i+1;j<nVar;j++){
 					for (int k=0;k<nVar;k++){
 						for (int r=0;r<=Math.pow(2, D) - 2;r++){
@@ -361,8 +361,22 @@ public class RpHND_GRB_Main {
 				}
 			}*/
 			
+			/*GRBLinExpr expr0 = new GRBLinExpr();
+			expr0.addTerm(1, y[1]);
+			model.addConstr(expr0, GRB.EQUAL, 1, null);
+			
+			expr0 = new GRBLinExpr();
+			expr0.addTerm(1, y[2]);
+			model.addConstr(expr0, GRB.EQUAL, 1, null);
+			
+			expr0 = new GRBLinExpr();
+			expr0.addTerm(1, y[6]);
+			model.addConstr(expr0, GRB.EQUAL, 1, null);*/
+			
 			// Optimize model
+			double startTime = System.currentTimeMillis();
 			model.optimize();
+			System.out.println("Elapsed time: "  + (System.currentTimeMillis() - startTime));
 			
 			//Printing solution to a file
 			File file = new File("D:/primalResults.txt");
