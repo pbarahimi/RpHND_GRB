@@ -9,13 +9,14 @@ public class RpHND_GRB_Main {
 	private static double alpha = 0.2;
 	private static double[][] tmpFlows = MyArray.read("w.txt");
 	private static double[][] coordinates = MyArray.read("coordinates.txt");
-	private static double[][] distances = Distance.get(coordinates);
+	private static double[][] fixedCosts = MyArray.read("fixedcharge.txt");
+	private static double[][] distances = Distance.get(coordinates);//MyArray.read("CAB10_Distance.txt");
 	private static int nVar = tmpFlows.length;
 	private static double[][] flows = new double[nVar][nVar];
-	private static int D = 2; // Maximum number of simultaneous disruptions
+	private static int D = 1; // Maximum number of simultaneous disruptions
 	private static int R = (int) Math.pow(2, D + 1) - 2; // Largest index in the
 															// full binary tree
-	private static double q = 0.3;
+	private static double q = 0.05;
 	private static int P = 3; // number of hubs to be located
 	private static int M = nVar * R; // the big M
 
@@ -25,10 +26,10 @@ public class RpHND_GRB_Main {
 	 * @param model
 	 * @throws GRBException
 	 */
-	private static void printSol(GRBModel model) throws GRBException{
+	public static void printSol(GRBModel model) throws GRBException{
 		for (GRBVar var : model.getVars()) 
-			if (var.get(GRB.DoubleAttr.X)>0) 
-				System.out.println(var.get(GRB.StringAttr.VarName) + " : " + var.get(GRB.DoubleAttr.X));
+			if (var.get(GRB.DoubleAttr.X)>0 /*&& var.get(GRB.StringAttr.VarName).contains("y")*/) 
+				System.out.println(var.get(GRB.StringAttr.VarName) + " : " + var.get(GRB.DoubleAttr.X) + " : " + var.get(GRB.DoubleAttr.Obj));
 	}
 	
 	/**
@@ -86,6 +87,7 @@ public class RpHND_GRB_Main {
 				flows[i][j] = tmpFlows[i][j] + tmpFlows[j][i];
 			}
 		}
+//		flows = MyArray.read("CAB10.txt");;
 		
 		try {
 			GRBEnv env = new GRBEnv("RpHND.log");
@@ -124,7 +126,7 @@ public class RpHND_GRB_Main {
 			}
 
 			for (int i = 0; i < nVar; i++) {
-				y[i] = model.addVar(0, 1.0, 0, GRB.BINARY, "y" + i);
+				y[i] = model.addVar(0, 1.0, fixedCosts[i][0], GRB.BINARY, "y" + i);
 			}
 
 			// Integrate new variables
@@ -215,7 +217,7 @@ public class RpHND_GRB_Main {
 			}
 
 			// Constraint 6
-			/*for (int i = 0; i < nVar; i++) {
+			for (int i = 0; i < nVar; i++) {
 				for (int j = i + 1; j < nVar; j++) {
 					for (int r = 0; r <= R; r++) {
 
@@ -250,7 +252,7 @@ public class RpHND_GRB_Main {
 						model.addConstr(con7, GRB.LESS_EQUAL, M, "u7_" + i + "_" + j + "_" + r);
 					}
 				}
-			}*/
+			}
 
 			// Constraint 8
 			for (int i = 0; i < nVar; i++) {
@@ -318,7 +320,7 @@ public class RpHND_GRB_Main {
 			}
 
 			// Constraint 10
-		/*	for (int i=0;i<nVar;i++){
+			for (int i=0;i<nVar;i++){
 				for (int j=i+1;j<nVar;j++){
 					for (int k=0;k<nVar;k++){
 						for (int r=0;r<=Math.pow(2, D) - 2;r++){
@@ -359,7 +361,7 @@ public class RpHND_GRB_Main {
 						}
 					}
 				}
-			}*/
+			}
 			
 			/*GRBLinExpr expr0 = new GRBLinExpr();
 			expr0.addTerm(1, y[1]);
@@ -379,22 +381,22 @@ public class RpHND_GRB_Main {
 			System.out.println("Elapsed time: "  + (System.currentTimeMillis() - startTime));
 			
 			//Printing solution to a file
-			File file = new File("D:/primalResults.txt");
-			PrintWriter out = new PrintWriter(file);
+//			File file = new File("D:/primalResults.txt");
+//			PrintWriter out = new PrintWriter(file);
 			
 				
 			
-			GRBVar[] vars = model.getVars();
+			/*GRBVar[] vars = model.getVars();
 			for (GRBVar var: vars){
 				out.println(var.get(GRB.DoubleAttr.Obj) + " " + var.get(GRB.StringAttr.VarName) + " " + var.get(GRB.DoubleAttr.X));
-			}
+			}*/
 			
 			/*GRBConstr[] constrs = model.getConstrs();
 			for (GRBConstr constr: constrs){
 				System.out.println(constr.get(GRB.StringAttr.ConstrName) + " " + constr.get(GRB.DoubleAttr.Pi));
 			}*/
 			
-			out.close();
+//			out.close();
 			
 			System.out.println("Number of variables: " + model.get(GRB.IntAttr.NumVars));
 			System.out.println("Number of constraints: " + model.get(GRB.IntAttr.NumConstrs));
