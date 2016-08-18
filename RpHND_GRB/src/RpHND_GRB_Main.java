@@ -1,8 +1,7 @@
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.PrintWriter;
-import java.util.List;
 
+import RpHND_GRB.model.BinaryTree;
+import RpHND_GRB.model.Distance;
 import gurobi.*;
 
 public class RpHND_GRB_Main {
