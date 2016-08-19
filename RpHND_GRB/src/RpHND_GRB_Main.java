@@ -19,65 +19,6 @@ public class RpHND_GRB_Main {
 	private static int P = 3; // number of hubs to be located
 	private static int M = nVar * R; // the big M
 
-	
-	/**
-	 * prints the solution
-	 * @param model
-	 * @throws GRBException
-	 */
-	public static void printSol(GRBModel model) throws GRBException{
-		for (GRBVar var : model.getVars()) 
-			if (var.get(GRB.DoubleAttr.X)>0 /*&& var.get(GRB.StringAttr.VarName).contains("y")*/) 
-				System.out.println(var.get(GRB.StringAttr.VarName) + " : " + var.get(GRB.DoubleAttr.X) + " : " + var.get(GRB.DoubleAttr.Obj));
-	}
-	
-	/**
-	 * 
-	 * @param i
-	 * @param j
-	 * @param k
-	 * @param m
-	 * @return operating probability of a route
-	 */
-	public static double Q(int i, int k, int m, int j) {
-		double result = q;
-		if (k!=i && j!=m)
-			result = q+q(k,m);
-		else if (m!=j)
-			result = q(i,m);
-		else if (k!=i)
-			result = q(j,k);
-		else if (i==k && j==m)
-			result = 0;
-		else 
-			System.out.println("Not include in the Q(i,k,m,j)!");
-		return result;
-	}
-
-	/**
-	 * Cikmj
-	 * 
-	 */
-	private static double Cikmj(int i, int k, int m, int j) {
-		double cost = distances[i][k] + (1 - alpha) * distances[k][m]
-				+ distances[m][j];
-		/*
-		 * double cost = collCost * distances[i][k] + transCost *
-		 * distances[k][m] + distCost * distances[m][j];
-		 */
-		return cost;
-	}
-
-	/**
-	 * q(k,m)
-	 */
-	private static double q(int k, int m) {
-		if (k == m)
-			return 0;
-		else
-			return q;
-	}
-
 	public static void main(String[] args) throws FileNotFoundException {
 		
 		//Filling in the flows matrix assymetrically 
@@ -86,10 +27,9 @@ public class RpHND_GRB_Main {
 				flows[i][j] = tmpFlows[i][j] + tmpFlows[j][i];
 			}
 		}
-//		flows = MyArray.read("CAB10.txt");;
 		
 		try {
-			GRBEnv env = new GRBEnv("RpHND.log");
+			GRBEnv env = new GRBEnv(null);
 			GRBModel model = new GRBModel(env);
 
 			// Create variables
@@ -403,7 +343,8 @@ public class RpHND_GRB_Main {
 			
 			//Results 
 			System.out.println("Obj: " + model.get(GRB.DoubleAttr.ObjVal));
-
+			GRBVar var = model.getVarByName("x0_3_3_4_2");
+			System.out.println(var.get(GRB.StringAttr.VarName) + ": " + var.get(GRB.DoubleAttr.Obj));
 			// Dispose of model and environment
 		    model.dispose();
 		    env.dispose();
@@ -414,5 +355,64 @@ public class RpHND_GRB_Main {
 					+ e.getMessage());
 		}
 
+	}
+
+	
+	/**
+	 * prints the solution
+	 * @param model
+	 * @throws GRBException
+	 */
+	public static void printSol(GRBModel model) throws GRBException{
+		for (GRBVar var : model.getVars()) 
+			if (var.get(GRB.DoubleAttr.X)>0 /*&& var.get(GRB.StringAttr.VarName).contains("y")*/) 
+				System.out.println(var.get(GRB.StringAttr.VarName) + " : " + var.get(GRB.DoubleAttr.X) + " : " + var.get(GRB.DoubleAttr.Obj));
+	}
+	
+	/**
+	 * 
+	 * @param i
+	 * @param j
+	 * @param k
+	 * @param m
+	 * @return operating probability of a route
+	 */
+	public static double Q(int i, int k, int m, int j) {
+		double result = q;
+		if (k!=i && j!=m)
+			result = q+q(k,m);
+		else if (m!=j)
+			result = q(i,m);
+		else if (k!=i)
+			result = q(j,k);
+		else if (i==k && j==m)
+			result = 0;
+		else 
+			System.out.println("Not include in the Q(i,k,m,j)!");
+		return result;
+	}
+
+	/**
+	 * Cikmj
+	 * 
+	 */
+	private static double Cikmj(int i, int k, int m, int j) {
+		double cost = distances[i][k] + (1 - alpha) * distances[k][m]
+				+ distances[m][j];
+		/*
+		 * double cost = collCost * distances[i][k] + transCost *
+		 * distances[k][m] + distCost * distances[m][j];
+		 */
+		return cost;
+	}
+
+	/**
+	 * q(k,m)
+	 */
+	private static double q(int k, int m) {
+		if (k == m)
+			return 0;
+		else
+			return q;
 	}
 }
