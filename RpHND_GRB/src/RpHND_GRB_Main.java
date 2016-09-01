@@ -15,7 +15,7 @@ public class RpHND_GRB_Main {
 	private static int D = 1; // Maximum number of simultaneous disruptions
 	private static int R = (int) Math.pow(2, D + 1) - 2; // Largest index in the
 															// full binary tree
-	private static double q = 0.05;
+	private static double q = 0.2;
 	private static int P = 3; // number of hubs to be located
 	private static int M = nVar * R; // the big M
 
@@ -65,7 +65,7 @@ public class RpHND_GRB_Main {
 			}
 
 			for (int i = 0; i < nVar; i++) {
-				y[i] = model.addVar(0, 1.0, fixedCosts[i][0], GRB.BINARY, "y" + i);
+				y[i] = model.addVar(0, 1.0, 0, GRB.BINARY, "y" + i);
 			}
 
 			// Integrate new variables
@@ -79,6 +79,8 @@ public class RpHND_GRB_Main {
 						for (int m = 0; m < nVar; m++) {
 							double CoEf = -1 * flows[i][j] * Cikmj(i, k, m, j) * (1 - Q(i,k,m,j));
 							expr.addTerm(CoEf, x[i][k][m][j][0]);
+							if (i==3 && k==2&&m==2&&j==4)
+								System.out.println(Cikmj(i, k, m, j) + "-" + (1 - Q(i,k,m,j)));
 						}
 					}
 				}
@@ -95,6 +97,10 @@ public class RpHND_GRB_Main {
 						}
 					}
 				}
+			}
+			
+			for (int i = 0; i < nVar; i++) {
+				expr.addTerm(-1* fixedCosts[i][0], y[i]);
 			}
 
 			model.setObjective(expr, GRB.MAXIMIZE);
@@ -240,7 +246,7 @@ public class RpHND_GRB_Main {
 						GRBLinExpr con9 = new GRBLinExpr();
 						for (int k = 0; k < nVar; k++) {
 							for (int m = 0; m < nVar; m++) {
-								if (m!=i && m!=j){
+								if (m!=i && m!=j && m!=k){
 									con9.addTerm(1, x[i][k][m][j][r]);
 								}
 							}
@@ -264,7 +270,6 @@ public class RpHND_GRB_Main {
 					for (int k=0;k<nVar;k++){
 						for (int r=0;r<=Math.pow(2, D) - 2;r++){
 							GRBLinExpr con10 = new GRBLinExpr();
-							System.out.println("r: " + r + ", D: " + D);
 							for (int s:BinaryTree.getLeftChildren(r, D)){
 								for (int m=0; m<nVar; m++){
 									con10.addTerm(1, x[i][k][m][j][s]);
@@ -314,12 +319,13 @@ public class RpHND_GRB_Main {
 			expr0.addTerm(1, y[6]);
 			model.addConstr(expr0, GRB.EQUAL, 1, null);*/
 			
+			
 			// Optimize model
 			double startTime = System.currentTimeMillis();
 			model.optimize();
 			System.out.println("Elapsed time: "  + (System.currentTimeMillis() - startTime));
-			
-			//Printing solution to a file
+						
+			// Printing solution to a file
 //			File file = new File("D:/primalResults.txt");
 //			PrintWriter out = new PrintWriter(file);
 			
@@ -336,6 +342,8 @@ public class RpHND_GRB_Main {
 			}*/
 			
 //			out.close();
+			for (GRBVar var : model.getVars())
+				System.out.println(var.get(GRB.StringAttr.VarName) + ":" + var.get(GRB.DoubleAttr.Obj));
 			
 			System.out.println("Number of variables: " + model.get(GRB.IntAttr.NumVars));
 			System.out.println("Number of constraints: " + model.get(GRB.IntAttr.NumConstrs));
@@ -378,13 +386,13 @@ public class RpHND_GRB_Main {
 	 * @return operating probability of a route
 	 */
 	public static double Q(int i, int k, int m, int j) {
-		double result = q;
+		double result = 0;
 		if (k!=i && j!=m)
-			result = q+q(k,m);
-		else if (m!=j)
+				result = q+q(k,m);	
+		else if (i==k && m!=j)
 			result = q(i,m);
-		else if (k!=i)
-			result = q(j,k);
+		else if (i!=k && m==j)
+			result = q(j,m);
 		else if (i==k && j==m)
 			result = 0;
 		else 
