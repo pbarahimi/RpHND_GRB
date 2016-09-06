@@ -307,52 +307,17 @@ public class RpHND_GRB_Main {
 				}
 			}
 			
-			/*GRBLinExpr expr0 = new GRBLinExpr();
-			expr0.addTerm(1, y[1]);
-			model.addConstr(expr0, GRB.EQUAL, 1, null);
-			
-			expr0 = new GRBLinExpr();
-			expr0.addTerm(1, y[2]);
-			model.addConstr(expr0, GRB.EQUAL, 1, null);
-			
-			expr0 = new GRBLinExpr();
-			expr0.addTerm(1, y[6]);
-			model.addConstr(expr0, GRB.EQUAL, 1, null);*/
-			
-			
 			// Optimize model
 			double startTime = System.currentTimeMillis();
 			model.optimize();
 			System.out.println("Elapsed time: "  + (System.currentTimeMillis() - startTime));
 						
-			// Printing solution to a file
-//			File file = new File("D:/primalResults.txt");
-//			PrintWriter out = new PrintWriter(file);
-			
-				
-			
-			/*GRBVar[] vars = model.getVars();
-			for (GRBVar var: vars){
-				out.println(var.get(GRB.DoubleAttr.Obj) + " " + var.get(GRB.StringAttr.VarName) + " " + var.get(GRB.DoubleAttr.X));
-			}*/
-			
-			/*GRBConstr[] constrs = model.getConstrs();
-			for (GRBConstr constr: constrs){
-				System.out.println(constr.get(GRB.StringAttr.ConstrName) + " " + constr.get(GRB.DoubleAttr.Pi));
-			}*/
-			
-//			out.close();
-			for (GRBVar var : model.getVars())
-				System.out.println(var.get(GRB.StringAttr.VarName) + ":" + var.get(GRB.DoubleAttr.Obj));
-			
 			System.out.println("Number of variables: " + model.get(GRB.IntAttr.NumVars));
 			System.out.println("Number of constraints: " + model.get(GRB.IntAttr.NumConstrs));
-			printSol(model);
-			
+
 			//Results 
 			System.out.println("Obj: " + model.get(GRB.DoubleAttr.ObjVal));
-			GRBVar var = model.getVarByName("x0_3_3_4_2");
-			System.out.println(var.get(GRB.StringAttr.VarName) + ": " + var.get(GRB.DoubleAttr.Obj));
+
 			// Dispose of model and environment
 		    model.dispose();
 		    env.dispose();
@@ -386,14 +351,14 @@ public class RpHND_GRB_Main {
 	 * @return operating probability of a route
 	 */
 	public static double Q(int i, int k, int m, int j) {
-		double result = 0;
-		if (k!=i && j!=m)
+		double result = q;
+		if (k!=i && j!=m) // ikmj
 				result = q+q(k,m);	
-		else if (i==k && m!=j)
+		else if (i==k && m!=j) // iimj
 			result = q(i,m);
-		else if (i!=k && m==j)
-			result = q(j,m);
-		else if (i==k && j==m)
+		else if (i!=k && m==j) // ikjj
+			result = q(j,k);
+		else if (i==k && j==m) // iijj
 			result = 0;
 		else 
 			System.out.println("Not include in the Q(i,k,m,j)!");
